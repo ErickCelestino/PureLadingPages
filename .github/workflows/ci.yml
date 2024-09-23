@@ -24,14 +24,21 @@ jobs:
           node-version: '16'
 
       # 3. Instalar dependências
-      - name: Install Dependencies
-        run: npm install --legacy-peer-deps
+      - name: Install Dependencies and Check Nx Version
+        run: |
+          npm install --legacy-peer-deps
+          npx nx --version
 
       # 4. Limpar cache do Nx e npm
-      - name: Clear Nx and npm Cache
+      - name: Clear Nx Cache and Reset
         run: |
+          echo "Antes do reset:"
+          ls -la .nx/
           rm -rf .nx/
           npm cache clean --force
+          npx nx reset
+          echo "Depois do reset:"
+          ls -la .nx/
 
       # 5. Limpar Cache do Nx e Resetar
       - name: Clear Nx Cache and Reset
