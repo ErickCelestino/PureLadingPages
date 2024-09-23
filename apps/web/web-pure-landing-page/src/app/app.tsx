@@ -1,7 +1,12 @@
+import { AppThemeProvider } from '@pure-lading-pages/feature';
 import { AppRouters } from './routes';
 
 export function App() {
-  return <Content />;
+  return (
+    <AppThemeProvider>
+      <Content />
+    </AppThemeProvider>
+  );
 }
 
 const Content = () => {
