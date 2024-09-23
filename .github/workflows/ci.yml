@@ -48,7 +48,9 @@ jobs:
       # 6. Detectar aplicações afetadas
       - name: Determine Affected Applications
         id: affected
-        run: npx nx affected --target=build
+        run: |
+          echo "APPS=$(npm run build:affected)" >> $GITHUB_ENV
+          echo "Affected apps: $APPS"
 
       # 7. Configurar AWS CLI
       - name: Configure AWS Credentials
