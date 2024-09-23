@@ -1,4 +1,11 @@
-import { Box, Typography, Avatar, Grid2 } from '@mui/material';
+import {
+  Box,
+  Typography,
+  Avatar,
+  Grid2,
+  Card,
+  CardContent,
+} from '@mui/material';
 import { Testimonial } from '@pure-lading-pages/domain';
 import { FC } from 'react';
 
@@ -24,9 +31,19 @@ export const SimpleTestimonials: FC<SimpleTestimonialsProps> = ({
         {listTestimonials.map((testimonial, index) => (
           <Grid2 key={index}>
             <Box sx={{ textAlign: 'center' }}>
-              <Avatar src={testimonial.avatar} sx={{ mx: 'auto', mb: 2 }} />
-              <Typography variant="h6">{testimonial.name}</Typography>
-              <Typography variant="body2">"{testimonial.feedback}"</Typography>
+              <Card
+                sx={{
+                  maxWidth: '15rem',
+                }}
+              >
+                <CardContent>
+                  <Avatar src={testimonial.avatar} sx={{ mx: 'auto', mb: 2 }} />
+                  <Typography variant="h6">{testimonial.name}</Typography>
+                  <Typography variant="body2">
+                    "{testimonial.feedback}"
+                  </Typography>
+                </CardContent>
+              </Card>
             </Box>
           </Grid2>
         ))}
