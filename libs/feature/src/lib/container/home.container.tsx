@@ -8,6 +8,7 @@ import {
   SimpleFooter,
   SimpleHeader,
   SimpleHeroSection,
+  SimpleTestimonials,
 } from '../components';
 
 export const HomeContainer = () => {
@@ -52,6 +53,18 @@ export const HomeContainer = () => {
                 title: 'Qualidade',
                 description:
                   'Produtos de alta qualidade que atendem às suas necessidades.',
+              },
+            ]}
+          />
+        }
+        testimonials={
+          <SimpleTestimonials
+            listTestimonials={[
+              {
+                name: 'Maria Silva',
+                feedback:
+                  'Excelente serviço! Minha empresa cresceu muito desde que começamos a trabalhar juntos.',
+                avatar: 'https://i.pravatar.cc/150?img=1',
               },
             ]}
           />
