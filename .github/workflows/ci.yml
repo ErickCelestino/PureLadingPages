@@ -1,38 +1,97 @@
-name: CI
+name: CI/CD Pipeline
 
 on:
   push:
     branches:
       - main
-  pull_request:
-
-permissions:
-  actions: read
-  contents: read
+      - deploy-in-aws
 
 jobs:
-  main:
+  deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      # 1. Checkout do código
+      - name: Checkout Code
+        uses: actions/checkout@v3
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Obter todo o histórico do Git
 
-      # This enables task distribution via Nx Cloud
-      # Run this command as early as possible, before dependencies are installed
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
-
-      # Cache node_modules
-      - uses: actions/setup-node@v4
+      # 2. Configurar Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: '16'
 
-      - run: npm ci --legacy-peer-deps
-      - uses: nrwl/nx-set-shas@v4
+      # 3. Instalar dependências
+      - name: Install Dependencies
+        run: npm install
 
-      # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
-      # - run: npx nx-cloud record -- echo Hello World
-      # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected -t lint test build
+      # 4. Limpar cache do Nx
+      - name: Clear Nx Cache
+        run: rm -rf .nx/
+
+      # 5. Resetar o cache do Nx
+      - name: Reset Nx Cache
+        run: npx nx reset
+
+      # 6. Detectar aplicações afetadas
+      - name: Determine Affected Applications
+        id: affected
+        run: |
+          echo "APPS=$(npx nx affected --target=build --base=origin/main --plain)" >> $GITHUB_ENV
+          echo "Affected apps: $APPS"
+
+      # 7. Configurar AWS CLI
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # 8. Fazer login no ECR
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      # 9. Construir e enviar imagens Docker
+      - name: Build and Push Docker Images
+        run: |
+          for app in $APPS; do
+            echo "Building Docker image for $app..."
+            docker build -t ${{ secrets.ECR_REGISTRY }}/$app:latest ./apps/$app
+
+            echo "Tagging Docker image for $app..."
+            docker tag ${{ secrets.ECR_REGISTRY }}/$app:latest ${{ secrets.ECR_REGISTRY }}/$app:$(git rev-parse --short HEAD)
+
+            echo "Pushing Docker image for $app..."
+            docker push ${{ secrets.ECR_REGISTRY }}/$app:latest
+            docker push ${{ secrets.ECR_REGISTRY }}/$app:$(git rev-parse --short HEAD)
+          done
+
+      # 10. Atualizar serviços no ECS
+      - name: Deploy to Amazon ECS
+        run: |
+          for app in $APPS; do
+            echo "Deploying $app to ECS..."
+            CLUSTER_NAME=${{ secrets.AWS_CLUSTER }}
+            SERVICE_NAME="${app}-service"
+            TASK_FAMILY="${app}-task"
+
+            TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition $TASK_FAMILY)
+            NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "${{ secrets.ECR_REGISTRY }}/$app:latest" '
+              .taskDefinition |
+              .containerDefinitions[0].image = $IMAGE |
+              del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)
+            ')
+
+            echo "Registering new task definition for $app..."
+            REGISTERED_TASK=$(aws ecs register-task-definition --cli-input-json "$NEW_TASK_DEFINITION")
+            NEW_TASK_DEF_ARN=$(echo $REGISTERED_TASK | jq -r '.taskDefinition.taskDefinitionArn')
+
+            echo "Updating ECS service for $app to use $NEW_TASK_DEF_ARN..."
+            aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --task-definition $NEW_TASK_DEF_ARN
+
+            echo "$app deployed successfully."
+          done
