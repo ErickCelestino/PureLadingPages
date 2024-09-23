@@ -17,6 +17,7 @@ export const HomeContainer = () => {
       <BaseLadingPageLayout
         header={
           <SimpleHeader
+            title="Pure Pages"
             listButtons={[
               {
                 title: 'Inicio',
@@ -34,11 +35,20 @@ export const HomeContainer = () => {
                     ?.scrollIntoView({ behavior: 'smooth' });
                 },
               },
+              {
+                title: 'Contate-nos',
+                to: () => {
+                  document
+                    .getElementById('call-to-attention')
+                    ?.scrollIntoView({ behavior: 'smooth' });
+                },
+              },
             ]}
           />
         }
         heroSection={
           <SimpleHeroSection
+            title="Bem-vindo à Pure Pages"
             buttonAction={() => {
               console.log('Ação');
             }}
@@ -47,6 +57,7 @@ export const HomeContainer = () => {
         callToAttention={<SimpleCallToAttention />}
         footer={
           <SimpleFooter
+            title="Pure Pages"
             icons={[
               {
                 icon: <Facebook />,

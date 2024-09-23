@@ -18,6 +18,7 @@ export const SimpleCallToAttention: FC<SimpleCtaProps> = ({
 }) => {
   return (
     <Box
+      id="call-to-attention"
       sx={{
         my: 8,
         textAlign: 'center',
