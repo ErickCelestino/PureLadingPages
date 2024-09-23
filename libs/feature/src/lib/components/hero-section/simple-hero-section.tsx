@@ -5,6 +5,7 @@ interface SimpleHeroSectionProps {
   title?: string;
   subTitle?: string;
   buttonTitle?: string;
+  backgroundColor?: string;
   buttonAction: () => void;
 }
 
@@ -12,6 +13,7 @@ export const SimpleHeroSection: FC<SimpleHeroSectionProps> = ({
   title = 'Bem-vindo à Minha Empresa',
   subTitle = 'Oferecemos soluções incríveis para o seu negócio crescer.',
   buttonTitle = 'Saiba Mais',
+  backgroundColor = '#f5f5f5',
   buttonAction,
 }) => {
   return (
@@ -23,6 +25,7 @@ export const SimpleHeroSection: FC<SimpleHeroSectionProps> = ({
         justifyContent: 'center',
         alignItems: 'center',
         textAlign: 'center',
+        backgroundColor: backgroundColor,
       }}
     >
       <Typography variant="h2" gutterBottom>
