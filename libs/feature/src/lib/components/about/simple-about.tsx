@@ -11,7 +11,7 @@ export const SimpleAbout: FC<SimpleAboutProps> = ({
   subTitle = 'Somos uma empresa dedicada a fornecer as melhores soluções para nossos clientes. Com anos de experiência no mercado, garantimos qualidade e satisfação.',
 }) => {
   return (
-    <Box sx={{ my: 8 }}>
+    <Box id="about" sx={{ my: 8 }}>
       <Typography variant="h4" gutterBottom>
         {title}
       </Typography>

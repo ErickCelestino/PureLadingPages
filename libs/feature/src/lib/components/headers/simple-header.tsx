@@ -12,7 +12,7 @@ export const SimpleHeader: FC<SimpleHeaderProps> = ({
   listButtons,
 }) => {
   return (
-    <AppBar position="static">
+    <AppBar id="home" position="static">
       <Toolbar>
         <Typography variant="h6" style={{ flexGrow: 1 }}>
           {title}

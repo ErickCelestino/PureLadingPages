@@ -19,9 +19,19 @@ export const HomeContainer = () => {
           <SimpleHeader
             listButtons={[
               {
-                title: 'Home',
+                title: 'Inicio',
                 to: () => {
-                  console.log('Home');
+                  document
+                    .getElementById('home')
+                    ?.scrollIntoView({ behavior: 'smooth' });
+                },
+              },
+              {
+                title: 'Sobre nós',
+                to: () => {
+                  document
+                    .getElementById('about')
+                    ?.scrollIntoView({ behavior: 'smooth' });
                 },
               },
             ]}
