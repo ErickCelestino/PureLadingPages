@@ -1,0 +1,9 @@
+{
+  "name": "web-pure-landing-page",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/web/web-pure-landing-page/src",
+  "projectType": "application",
+  "tags": ["application"],
+  "// targets": "to see all targets run: nx show project web-pure-landing-page --web",
+  "targets": {}
+}
