@@ -6,7 +6,9 @@
     "prepare": "husky",
     "lint": "nx format:check --all",
     "lint:write": "nx format:write --all",
-    "start:pure-landing": "nx run web-pure-landing-page:serve"
+    "start:pure-landing": "nx run web-pure-landing-page:serve",
+    "build:pure-landing": "nx build web-pure-landing-page",
+    "docker": "docker-compose up"
   },
   "private": true,
   "devDependencies": {

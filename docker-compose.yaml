@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  web-pure-lading-page:
+    build:
+      context: .
+      dockerfile: ./configs/docker/Dockerfile.web-pure-landing-page
+    ports:
+      - '${NX_APP_FRONT_PURE_LANDING_PAGE}:80'
+    environment:
+      - NODE_ENV=production
+      - NX_APP_FRONT_PURE_LANDING_PAGE= ${NX_APP_FRONT_PURE_LANDING_PAGE}
