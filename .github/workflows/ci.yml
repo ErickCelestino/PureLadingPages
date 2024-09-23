@@ -25,7 +25,7 @@ jobs:
 
       # 3. Instalar dependências
       - name: Install Dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       # 4. Limpar cache do Nx
       - name: Clear Nx Cache
