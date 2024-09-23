@@ -27,13 +27,18 @@ jobs:
       - name: Install Dependencies
         run: npm install --legacy-peer-deps
 
-      # 4. Limpar cache do Nx
-      - name: Clear Nx Cache
-        run: rm -rf .nx/
+      # 4. Limpar cache do Nx e npm
+      - name: Clear Nx and npm Cache
+        run: |
+          rm -rf .nx/
+          npm cache clean --force
 
-      # 5. Resetar o cache do Nx
-      - name: Reset Nx Cache
-        run: npx nx reset
+      # 5. Limpar Cache do Nx e Resetar
+      - name: Clear Nx Cache and Reset
+        run: |
+          rm -rf .nx/
+          npm cache clean --force
+          npx nx reset
 
       # 6. Detectar aplicações afetadas
       - name: Determine Affected Applications
