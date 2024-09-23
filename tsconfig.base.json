@@ -15,6 +15,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@pure-lading-pages/domain": ["libs/domain/src/index.ts"],
       "@pure-lading-pages/feature": ["libs/feature/src/index.ts"]
     }
   },
