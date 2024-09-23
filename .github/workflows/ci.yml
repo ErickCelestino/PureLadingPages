@@ -40,6 +40,12 @@ jobs:
           npm cache clean --force
           npx nx reset
 
+      - name: Debug Git State
+        run: |
+          git fetch --prune --unshallow
+          git branch -a
+          git log --oneline -n 5
+
       # 6. Detectar aplicações afetadas
       - name: Determine Affected Applications
         id: affected
