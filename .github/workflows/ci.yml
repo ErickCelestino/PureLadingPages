@@ -42,18 +42,23 @@ jobs:
 
       - name: Debug Git State
         run: |
-          git fetch --prune --unshallow
+          git fetch --prune
           git branch -a
           git log --oneline -n 5
 
-      # 6. Detectar aplicações afetadas
+      # 6. Verificar a existência da branch base
+      - name: Check Branch
+        run: |
+          git branch -r
+
+      # 7. Detectar aplicações afetadas
       - name: Determine Affected Applications
         id: affected
         run: |
-          echo "APPS=$(npx nx affected --target=build --base=origin/main --plain)" >> $GITHUB_ENV
+          echo "APPS=$(npx nx affected --target=build --base=HEAD~1 --plain)" >> $GITHUB_ENV
           echo "Affected apps: $APPS"
 
-      # 7. Configurar AWS CLI
+      # 8. Configurar AWS CLI
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -61,12 +66,12 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # 8. Fazer login no ECR
+      # 9. Fazer login no ECR
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      # 9. Construir e enviar imagens Docker
+      # 10. Construir e enviar imagens Docker
       - name: Build and Push Docker Images
         run: |
           for app in $APPS; do
@@ -81,7 +86,7 @@ jobs:
             docker push ${{ secrets.ECR_REGISTRY }}/$app:$(git rev-parse --short HEAD)
           done
 
-      # 10. Atualizar serviços no ECS
+      # 11. Atualizar serviços no ECS
       - name: Deploy to Amazon ECS
         run: |
           for app in $APPS; do
