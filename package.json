@@ -5,7 +5,8 @@
   "scripts": {
     "prepare": "husky",
     "lint": "nx format:check --all",
-    "lint:write": "nx format:write --all"
+    "lint:write": "nx format:write --all",
+    "start:pure-landing": "nx run web-pure-landing-page:serve"
   },
   "private": true,
   "devDependencies": {
