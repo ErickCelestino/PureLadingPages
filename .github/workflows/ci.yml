@@ -1,105 +1,66 @@
-name: CI/CD Pipeline
+name: Deploy to Amazon ECS
 
 on:
   push:
-    branches:
-      - main
-      - deploy-in-aws-2
+    branches: ['main', 'deploy-in-aws-2']
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }} # set this to your preferred AWS region, e.g. us-west-1
+  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }} # set this to your Amazon ECR repository name
+  ECS_SERVICE: ${{ secrets.ECS_SERVICE }} # set this to your Amazon ECS service name
+  ECS_CLUSTER: ${{ secrets.ECS_CLUSTER }} # set this to your Amazon ECS cluster name
+  ECS_TASK_DEFINITION: ${{ secrets.ECS_TASK_DEFINITION }} # set this to the path to your Amazon ECS task definition
+  CONTAINER_NAME: ${{ secrets.CONTAINER_NAME }} # set this to the name of the container in the
+
+permissions:
+  contents: read
 
 jobs:
   deploy:
+    name: Deploy
     runs-on: ubuntu-latest
+    environment: production
 
     steps:
-      # 1. Checkout do código
-      - name: Checkout Code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0 # Obter todo o histórico do Git
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      # 2. Configurar Node.js
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16'
-
-      # 3. Instalar dependências
-      - name: Install Dependencies and Check Nx Version
-        run: |
-          npm install --legacy-peer-deps
-          npx nx --version
-
-      # 4. Limpar cache do Nx e npm
-      - name: Clear Nx Cache and Reset
-        run: |
-          echo "Antes do reset:"
-          ls -la .nx/
-          rm -rf .nx/
-          npm cache clean --force
-          npx nx reset
-          echo "Depois do reset:"
-          ls -la .nx/
-
-      # 5. Verificar a existência da branch base
-      - name: Check Branch
-        run: |
-          git branch -r
-
-      # 6. Detectar aplicações afetadas
-      - name: Determine Affected Applications
-        id: affected
-        run: npm run build:affected
-
-      # 7. Configurar AWS CLI
-      - name: Configure AWS Credentials
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      # 8. Fazer login no ECR
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      # 9. Construir e enviar imagens Docker
-      - name: Build and Push Docker Images
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          for app in $APPS; do
-            echo "Building Docker image for $app..."
-            docker build -t ${{ secrets.ECR_REGISTRY }}/$app:latest ./apps/$app
+          # Build a docker container and
+          # push it to ECR so that it can
+          # be deployed to ECS.
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-            echo "Tagging Docker image for $app..."
-            docker tag ${{ secrets.ECR_REGISTRY }}/$app:latest ${{ secrets.ECR_REGISTRY }}/$app:$(git rev-parse --short HEAD)
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.build-image.outputs.image }}
 
-            echo "Pushing Docker image for $app..."
-            docker push ${{ secrets.ECR_REGISTRY }}/$app:latest
-            docker push ${{ secrets.ECR_REGISTRY }}/$app:$(git rev-parse --short HEAD)
-          done
-
-      # 10. Atualizar serviços no ECS
-      - name: Deploy to Amazon ECS
-        run: |
-          for app in $APPS; do
-            echo "Deploying $app to ECS..."
-            CLUSTER_NAME=${{ secrets.AWS_CLUSTER }}
-            SERVICE_NAME="${app}-service"
-            TASK_FAMILY="${app}-task"
-
-            TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition $TASK_FAMILY)
-            NEW_TASK_DEFINITION=$(echo $TASK_DEFINITION | jq --arg IMAGE "${{ secrets.ECR_REGISTRY }}/$app:latest" '
-              .taskDefinition |
-              .containerDefinitions[0].image = $IMAGE |
-              del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)
-            ')
-
-            echo "Registering new task definition for $app..."
-            REGISTERED_TASK=$(aws ecs register-task-definition --cli-input-json "$NEW_TASK_DEFINITION")
-            NEW_TASK_DEF_ARN=$(echo $REGISTERED_TASK | jq -r '.taskDefinition.taskDefinitionArn')
-
-            echo "Updating ECS service for $app to use $NEW_TASK_DEF_ARN..."
-            aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --task-definition $NEW_TASK_DEF_ARN
-
-            echo "$app deployed successfully."
-          done
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
