@@ -48,7 +48,7 @@ export const HomeContainer = () => {
         }
         heroSection={
           <SimpleHeroSection
-            title="Bem-vindo à Pure Pages"
+            title="Bem-vindo à Pure Pages tela de teste"
             buttonAction={() => {
               console.log('Ação');
             }}
