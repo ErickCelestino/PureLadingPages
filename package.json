@@ -8,7 +8,8 @@
     "lint:write": "nx format:write --all",
     "start:pure-landing": "nx run web-pure-landing-page:serve",
     "build:pure-landing": "nx build web-pure-landing-page",
-    "docker": "docker-compose up"
+    "docker": "docker-compose up",
+    "build:affected": "npx nx affected --target=build --base=HEAD~1"
   },
   "private": true,
   "devDependencies": {

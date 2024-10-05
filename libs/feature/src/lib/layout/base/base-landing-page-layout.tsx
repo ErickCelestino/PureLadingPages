@@ -5,7 +5,7 @@ interface BaseLandingPageLayoutProps {
   header: ReactNode;
   footer: ReactNode;
   heroSection: ReactNode;
-  cta: ReactNode;
+  callToAttention: ReactNode;
   about?: ReactNode;
   testimonials?: ReactNode;
   features?: ReactNode;
@@ -14,7 +14,7 @@ interface BaseLandingPageLayoutProps {
 export const BaseLadingPageLayout: FC<BaseLandingPageLayoutProps> = ({
   header,
   footer,
-  cta,
+  callToAttention,
   heroSection,
   about,
   features,
@@ -28,7 +28,7 @@ export const BaseLadingPageLayout: FC<BaseLandingPageLayoutProps> = ({
         {about && about}
         {features && features}
         {testimonials && testimonials}
-        {cta}
+        {callToAttention}
       </Container>
       {footer}
     </Box>
