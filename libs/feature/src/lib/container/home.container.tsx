@@ -17,7 +17,7 @@ export const HomeContainer = () => {
       <BaseLadingPageLayout
         header={
           <SimpleHeader
-            title="Pure Pages"
+            title="Pure Pages teste docker"
             listButtons={[
               {
                 title: 'Inicio',
