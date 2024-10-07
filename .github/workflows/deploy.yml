@@ -60,6 +60,12 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
+      - name: Debug Docker build loop
+        run: |
+          while IFS= read -r app; do
+            echo "Processing project: $app"
+          done < affected.txt
+
       - name: Build, tag, and push images for affected projects
         if: success()
         run: |
