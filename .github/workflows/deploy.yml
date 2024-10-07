@@ -21,6 +21,9 @@ jobs:
       - name: Fetch all branches
         run: git fetch --all
 
+      - name: List branches
+        run: git branch -r
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
