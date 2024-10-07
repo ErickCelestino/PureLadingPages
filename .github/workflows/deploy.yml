@@ -44,6 +44,8 @@ jobs:
       - name: Determine affected projects
         id: affected
         run: |
+          git fetch origin ${{ env.TARGET_BRANCH }}:$TARGET_BRANCH
+          git checkout $TARGET_BRANCH
           echo "Running Nx command..."
           npx nx show projects --affected --type=app --verbose > affected.txt
           echo "Nx command completed with exit code $?"
