@@ -12,6 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
 
+    env:
+      TARGET_BRANCH: 'deploy-affected-apps'
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -20,6 +23,12 @@ jobs:
 
       - name: Fetch all branches
         run: git fetch --all
+
+      - name: Checkout target branch
+        run: git checkout ${{ env.TARGET_BRANCH }}
+
+      - name: Pull latest changes
+        run: git pull origin ${{ env.TARGET_BRANCH }}
 
       - name: List branches
         run: git branch -r
@@ -55,16 +64,13 @@ jobs:
           while IFS= read -r app; do
             echo "Building and pushing Docker image for project: $app"
 
-            # Define the repository and Dockerfile dynamically based on the project name
             ECR_REGISTRY="${{ steps.login-ecr.outputs.registry }}"
             ECR_REPOSITORY="${{ secrets.ECR_REPOSITORY }}-$app"
             IMAGE_TAG="${{ github.sha }}"
 
-            # Build and push the image
             docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f ./configs/docker/Dockerfile.$app .
             docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-            # Save the image URL for later use
             echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
           done < affected.txt
 
