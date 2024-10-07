@@ -63,6 +63,7 @@ jobs:
       - name: Build, tag, and push images for affected projects
         if: success()
         run: |
+          echo "app: $app"
           while IFS= read -r app; do
             echo "Building and pushing Docker image for project: $app"
 
