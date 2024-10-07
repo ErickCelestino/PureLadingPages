@@ -44,6 +44,7 @@ jobs:
       - name: Determine affected projects
         id: affected
         run: |
+          git log --oneline
           npx nx show projects --affected --type=app > affected.txt
           cat affected.txt
 
