@@ -40,6 +40,8 @@ jobs:
         run: |
           echo "Running Nx command..."
           npx nx reset
+          git fetch origin main
+          git reset --hard origin/main
           npx nx show projects --affected --type=app --base=main --head=HEAD --verbose > affected.txt
           echo "Nx command completed with exit code $?"
           cat affected.txt
