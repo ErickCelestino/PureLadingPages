@@ -45,7 +45,9 @@ jobs:
         id: affected
         run: |
           git log --oneline
-          npx nx show projects --affected --type=app > affected.txt
+          echo "Running Nx command..."
+          npx nx show projects --affected --type=app --verbose > affected.txt
+          echo "Nx command completed with exit code $?"
           cat affected.txt
 
       - name: Configure AWS credentials
