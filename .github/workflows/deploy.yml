@@ -44,7 +44,6 @@ jobs:
       - name: Determine affected projects
         id: affected
         run: |
-          git log --oneline
           echo "Running Nx command..."
           npx nx show projects --affected --type=app --verbose > affected.txt
           echo "Nx command completed with exit code $?"
