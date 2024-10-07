@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -29,7 +29,7 @@ jobs:
       - name: Determine affected projects
         id: affected
         run: |
-          npx nx affected:apps --plain > affected.txt
+          npx nx show projects --affected --type=app > affected.txt
           cat affected.txt
 
       - name: Configure AWS credentials
