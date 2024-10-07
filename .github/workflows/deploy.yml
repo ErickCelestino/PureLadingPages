@@ -44,12 +44,11 @@ jobs:
           echo "Nx command completed with exit code $?"
           cat affected.txt
 
-      - name: Check for affected projects
+      - name: Debug Docker build loop
         run: |
-          if [ ! -s affected.txt ]; then
-            echo "Nenhum projeto afetado foi encontrado. Falhando o job."
-            exit 1
-          fi
+          while IFS= read -r app; do
+            echo "Processing project: $app"
+          done < affected.txt
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -61,12 +60,6 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-
-      - name: Debug Docker build loop
-        run: |
-          while IFS= read -r app; do
-            echo "Processing project: $app"
-          done < affected.txt
 
       - name: Build, tag, and push images for affected projects
         if: success()
