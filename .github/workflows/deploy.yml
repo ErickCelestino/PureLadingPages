@@ -13,7 +13,7 @@ jobs:
     environment: production
 
     env:
-      TARGET_BRANCH: 'deploy-affected-apps'
+      TARGET_BRANCH: 'main'
 
     steps:
       - name: Checkout repository
