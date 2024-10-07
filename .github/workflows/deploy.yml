@@ -44,11 +44,12 @@ jobs:
           echo "Nx command completed with exit code $?"
           cat affected.txt
 
-      - name: Debug Docker build loop
+      - name: Check for affected projects
         run: |
-          while IFS= read -r app; do
-            echo "Processing project: $app"
-          done < affected.txt
+          if [ ! -s affected.txt ]; then
+            echo "Nenhum projeto afetado foi encontrado. Falhando o job."
+            exit 1
+          fi
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
