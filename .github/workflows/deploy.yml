@@ -74,17 +74,23 @@ jobs:
       - name: Build, tag, and push images for affected projects
         if: success()
         run: |
+          # Defina o repositório único no ECR
+          ECR_REGISTRY="${{ steps.login-ecr.outputs.registry }}"
+          ECR_REPOSITORY="${{ secrets.ECR_REPOSITORY }}"  # Nome fixo do repositório ECR
+          IMAGE_TAG="${{ github.sha }}"  # Use o SHA do commit como tag para garantir unicidade
+
+          # Para cada app, construa e faça o push da imagem
           while IFS= read -r app; do
             echo "Building and pushing Docker image for project: $app"
 
-            ECR_REGISTRY="${{ steps.login-ecr.outputs.registry }}"
-            ECR_REPOSITORY="${{ secrets.ECR_REPOSITORY }}-$app"
-            IMAGE_TAG="${{ github.sha }}"
+            # Construa a imagem usando o Dockerfile específico do app
+            docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$app-$IMAGE_TAG -f ./configs/docker/Dockerfile.$app .
 
-            docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f ./configs/docker/Dockerfile.$app .
-            docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+            # Empurre a imagem para o repositório ECR
+            docker push $ECR_REGISTRY/$ECR_REPOSITORY:$app-$IMAGE_TAG
 
-            echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
+            # Defina a variável de ambiente com o nome da imagem para uso posterior
+            echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$app-$IMAGE_TAG" >> $GITHUB_ENV
           done < affected.txt
 
       - name: Download task definition
