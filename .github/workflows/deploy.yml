@@ -18,15 +18,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Fetch all branches
-        run: git fetch --all
-
-      - name: Checkout target branch
-        run: git checkout main
-
-      - name: Pull latest changes
-        run: git pull origin main
-
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
@@ -38,19 +29,17 @@ jobs:
       - name: Determine affected projects
         id: affected
         run: |
-          echo "Running Nx command..."
+          echo "Running Nx command to find affected apps..."
           npx nx reset
-          git fetch origin main
-          git reset --hard origin/main
           npx nx show projects --affected --type=app --base=main --head=HEAD --verbose > affected.txt
-          echo "Nx command completed with exit code $?"
+          echo "Nx command completed."
           cat affected.txt
 
       - name: Check for affected projects
         run: |
           if [ ! -s affected.txt ]; then
-            echo "Nenhum projeto afetado foi encontrado. Falhando o job."
-            exit 1
+            echo "Nenhum projeto afetado foi encontrado. Pulando o deploy."
+            exit 0  # Alterado para sucesso ao invés de falha
           fi
 
       - name: Configure AWS credentials
@@ -65,7 +54,6 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Build, tag, and push images for affected projects
-        if: success()
         run: |
           while IFS= read -r app; do
             echo "Building and pushing Docker image for project: $app"
@@ -81,26 +69,22 @@ jobs:
           done < affected.txt
 
       - name: Download task definition
-        if: success()
         run: |
           aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_DEFINITION_NAME }} --query taskDefinition > task-definition.json
 
       - name: Clean task definition
-        if: success()
         run: |
           jq 'del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)' task-definition.json > task-def-clean.json
 
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
-        if: success()
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: task-definition.json
+          task-definition: task-def-clean.json
           container-name: ${{ secrets.CONTAINER_NAME }}
           image: ${{ env.image }}
 
       - name: Deploy Amazon ECS task definition
-        if: success()
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
