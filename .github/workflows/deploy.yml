@@ -18,6 +18,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Checkout target branch
+        run: git checkout main
+
+      - name: Pull latest changes
+        run: git pull origin main
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
