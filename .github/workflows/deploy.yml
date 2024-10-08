@@ -21,8 +21,17 @@ jobs:
       - name: Fetch all branches
         run: git fetch origin
 
+      - name: Ensure main branch exists
+        run: |
+          if git show-ref --verify --quiet refs/heads/main; then
+            echo "Branch main exists locally"
+          else
+            echo "Branch main doesn't exist locally. Creating it."
+            git checkout -b main origin/main
+          fi
+
       - name: Checkout main branch
-        run: git checkout origin/main
+        run: git checkout main
 
       - name: Pull latest changes from main
         run: git pull origin main
