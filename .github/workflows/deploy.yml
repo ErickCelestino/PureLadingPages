@@ -2,7 +2,7 @@ name: Deploy to ECS
 
 on:
   push:
-    branches: ['main', 'deploy-affected-apps']
+    branches: ['main', 'dev']
   pull_request:
     branches: ['main']
   workflow_dispatch:
