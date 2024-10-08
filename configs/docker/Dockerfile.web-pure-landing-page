@@ -11,6 +11,7 @@ RUN npm run build:pure-landing
 FROM nginx:alpine
 
 COPY --from=builder /app/dist/apps/web/web-pure-landing-page /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
