@@ -4,9 +4,9 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 export const AppRouters = () => {
   return (
     <Routes>
-      <Route path="/home12" element={<HomeContainer />} />
+      <Route path="/home123" element={<HomeContainer />} />
 
-      <Route path="*" element={<Navigate to="/home12" />} />
+      <Route path="*" element={<Navigate to="/home123" />} />
     </Routes>
   );
   //
