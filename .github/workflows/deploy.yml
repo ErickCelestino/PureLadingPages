@@ -50,7 +50,7 @@ jobs:
           echo "Running Nx command..."
           npx nx reset
           npx nx show projects --affected --type=app --base=dev --head=HEAD --verbose > affected.txt
-          echo "Nx command completed with exit code $?"
+          echo "Nx command completed with exit code $?."
           cat affected.txt
 
       - name: Check for affected projects
@@ -74,49 +74,83 @@ jobs:
       - name: Build, tag, and push images for affected projects
         if: success()
         run: |
-          # Defina o repositório único no ECR
+          # Define single repository in ECR
           ECR_REGISTRY="${{ steps.login-ecr.outputs.registry }}"
           ECR_REPOSITORY="${{ secrets.ECR_REPOSITORY }}"  # Nome fixo do repositório ECR
           IMAGE_TAG="${{ github.sha }}"  # Use o SHA do commit como tag para garantir unicidade
 
-          # Para cada app, construa e faça o push da imagem
+          # For each app, build and push the image
           while IFS= read -r app; do
             echo "Building and pushing Docker image for project: $app"
 
-            # Construa a imagem usando o Dockerfile específico do app
+            # Build the image using the app-specific Dockerfile
             docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$app-$IMAGE_TAG -f ./configs/docker/Dockerfile.$app .
 
-            # Empurre a imagem para o repositório ECR
+            # Push the image to the ECR repository
             docker push $ECR_REGISTRY/$ECR_REPOSITORY:$app-$IMAGE_TAG
 
-            # Defina a variável de ambiente com o nome da imagem para uso posterior
+            # Set the environment variable with the image name for later use
             echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$app-$IMAGE_TAG" >> $GITHUB_ENV
           done < affected.txt
 
-      - name: Download task definition
+      - name: Check if task definition exists
+        id: task-exists
+        run: |
+          aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_DEFINITION_NAME }} > task-definition.json || echo "Task definition does not exist"
+
+      - name: Register or update task definition
+        id: register-update-task
+        run: |
+          # Check if the task already exists (from the previous step)
+          TASK_EXISTS=$(jq 'has("taskDefinitionArn")' task-definition.json)
+
+          if [ "$TASK_EXISTS" == "true" ]; then
+            echo "Updating existing task definition..."
+
+            # Update the existing task definition with the new image
+            aws ecs update-service \
+              --cluster ${{ secrets.ECS_CLUSTER }} \
+              --service ${{ secrets.ECS_SERVICE }} \
+              --task-definition ${{ secrets.ECS_TASK_DEFINITION_NAME }} \
+              --force-new-deployment
+          else
+            echo "Registering new task definition..."
+
+            # Registering a new task definition
+            aws ecs register-task-definition \
+              --family ${{ secrets.ECS_TASK_DEFINITION_NAME }} \
+              --container-definitions "[
+                {
+                  \"name\": \"${{ secrets.CONTAINER_NAME }}\",
+                  \"image\": \"${{ env.image }}\",
+                  \"memory\": 512,
+                  \"cpu\": 256,
+                  \"essential\": true,
+                  \"portMappings\": [
+                    {
+                      \"containerPort\": 80,
+                      \"hostPort\": 80
+                    }
+                  ],
+                  \"logConfiguration\": {
+                    \"logDriver\": \"awslogs\",
+                    \"options\": {
+                      \"awslogs-group\": \"/ecs/my-app\",
+                      \"awslogs-region\": \"us-west-1\",
+                      \"awslogs-stream-prefix\": \"ecs\"
+                    }
+                  }
+                }
+              ]"
+          fi
+
+      - name: Deploy ECS task definition
         if: success()
         run: |
-          aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_DEFINITION_NAME }} --query taskDefinition > task-definition.json
-
-      - name: Clean task definition
-        if: success()
-        run: |
-          jq 'del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)' task-definition.json > task-def-clean.json
-
-      - name: Fill in the new image ID in the Amazon ECS task definition
-        id: task-def
-        if: success()
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: task-definition.json
-          container-name: ${{ secrets.CONTAINER_NAME }}
-          image: ${{ env.image }}
-
-      - name: Deploy Amazon ECS task definition
-        if: success()
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
-        with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ secrets.ECS_SERVICE }}
-          cluster: ${{ secrets.ECS_CLUSTER }}
-          wait-for-service-stability: true
+          # If the task has been updated or registered, deploy it
+          aws ecs update-service \
+            --cluster ${{ secrets.ECS_CLUSTER }} \
+            --service ${{ secrets.ECS_SERVICE }} \
+            --task-definition ${{ secrets.ECS_TASK_DEFINITION_NAME }} \
+            --force-new-deployment \
+            --region ${{ secrets.AWS_REGION }}
