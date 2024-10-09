@@ -135,8 +135,8 @@ jobs:
                   \"logConfiguration\": {
                     \"logDriver\": \"awslogs\",
                     \"options\": {
-                      \"awslogs-group\": \"/ecs/my-app\",
-                      \"awslogs-region\": \"us-west-1\",
+                      \"awslogs-group\": \"/ecs/pure-pages-family\",
+                      \"awslogs-region\": \"sa-east-1\",
                       \"awslogs-stream-prefix\": \"ecs\"
                     }
                   }
