@@ -19,7 +19,7 @@ jobs:
       - name: Fetch all branches
         run: git fetch origin 'refs/heads/*:refs/remotes/origin/*'
 
-      - name: Ensure main branch exists
+      - name: Ensure dev branch exists
         run: |
           if git show-ref --verify --quiet refs/heads/dev; then
               echo "Branch dev exists locally"
