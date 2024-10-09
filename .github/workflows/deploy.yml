@@ -17,7 +17,7 @@ jobs:
           fetch-depth: 0
 
       - name: Fetch all branches
-        run: git fetch origin
+        run: git fetch origin 'refs/heads/*:refs/remotes/origin/*'
 
       - name: Ensure main branch exists
         run: |
@@ -47,7 +47,7 @@ jobs:
         run: |
           echo "Running Nx command..."
           npx nx reset
-          npx nx show projects --affected --type=app --base=$(git rev-parse HEAD~1) --verbose > affected.txt
+          npx nx show projects --affected --type=app --base=dev --verbose > affected.txt
           echo "Nx command completed with exit code $?."
           cat affected.txt
 
