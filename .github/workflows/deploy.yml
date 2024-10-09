@@ -21,12 +21,12 @@ jobs:
 
       - name: Ensure main branch exists
         run: |
-          if git show-ref --verify --quiet refs/heads/main; then
-            echo "Branch main exists locally"
-          else
-            echo "Branch main doesn't exist locally. Creating it."
-            git checkout -b main origin/main
-          fi
+          if git show-ref --verify --quiet refs/heads/dev; then
+              echo "Branch dev exists locally"
+            else
+              echo "Branch dev doesn't exist locally. Creating it."
+              git checkout -b dev origin/dev
+            fi
 
       - name: Checkout main branch
         run: git checkout main
