@@ -17,16 +17,16 @@ jobs:
           fetch-depth: 0
 
       - name: Fetch all branches
-        run: git fetch origin
+        run: git fetch origin 'refs/heads/*:refs/remotes/origin/*'
 
-      - name: Ensure main branch exists
+      - name: Ensure dev branch exists
         run: |
-          if git show-ref --verify --quiet refs/heads/main; then
-            echo "Branch main exists locally"
-          else
-            echo "Branch main doesn't exist locally. Creating it."
-            git checkout -b main origin/main
-          fi
+          if git show-ref --verify --quiet refs/heads/dev; then
+              echo "Branch dev exists locally"
+            else
+              echo "Branch dev doesn't exist locally. Creating it."
+              git checkout -b dev origin/dev
+            fi
 
       - name: Checkout main branch
         run: git checkout main
@@ -47,7 +47,7 @@ jobs:
         run: |
           echo "Running Nx command..."
           npx nx reset
-          npx nx show projects --affected --type=app --base=dev --head=HEAD --verbose > affected.txt
+          npx nx show projects --affected --type=app --base=dev --verbose > affected.txt
           echo "Nx command completed with exit code $?."
           cat affected.txt
 

@@ -12,5 +12,5 @@ export function App() {
 const Content = () => {
   return <AppRouters />;
 };
-// teste
+
 export default App;
