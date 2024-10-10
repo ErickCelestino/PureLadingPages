@@ -9,3 +9,12 @@ services:
     environment:
       - NODE_ENV=production
       - NX_APP_FRONT_PURE_LANDING_PAGE= ${NX_APP_FRONT_PURE_LANDING_PAGE}
+  web-pure-institutional:
+    build:
+      context: .
+      dockerfile: ./configs/docker/Dockerfile.web-pure-institutional
+    ports:
+      - '${NX_APP_FRONT_PURE_INSTITUTIONAL}:80'
+    environment:
+      - NODE_ENV=production
+      - NX_APP_FRONT_PURE_INSTITUTIONAL= ${NX_APP_FRONT_PURE_INSTITUTIONAL}
